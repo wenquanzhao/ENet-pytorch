@@ -41,10 +41,10 @@ class initialBlock(nn.Module):
             # batch, channels, height, width, i.e. (N,C,H,W)
             x = torch.ones(1, 3, 512, 512)
         
-        main = self.conv3x3(images)   # 1, 13, 256, 256
+        main = self.conv3x3(x)   # 1, 13, 256, 256
         main = self.batchnorm(main)   # normalization on each channel-
                                       # all pixels are used to compute Mean and Var
-        side = self.maxpool(images)   # 1, 3, 256, 256 
+        side = self.maxpool(x)   # 1, 3, 256, 256 
         
         x = torch.cat((main, side), dim=1) # torch.Size([1, 16, 256, 256])
         x = self.activation(x)
