@@ -72,7 +72,6 @@ class bottleNeck(nn.Module):
     #        \         /
     #      Summing + PReLU
     # Params: 
-    #  dilation - if True: creating dilation bottleneck
     #  sampling_flag(bool) - if True: down sampling, if False: no sampling
     #  ratio - ratio between input and output channels
     #  p - dropout ratio
@@ -269,7 +268,90 @@ class bottleNeck_as(nn.Module):
         
         return x
     
-
+class bottleNeck_up(nn.Module):
+    # Upsampling bottleneck:
+    #     Bottleneck Input
+    #        /        \
+    #       /          \
+    # conv2d-1x1     convTrans2d-1x1
+    #      |             | PReLU
+    #      |         convTrans2d-3x3
+    #      |             | PReLU
+    #      |         convTrans2d-1x1
+    #      |             |
+    # maxunpool2d    Regularizer
+    #       \           /  
+    #        \         /
+    #      Summing + PReLU
+    #  Regularizer: L1, L2, Dropout 
+    #  Params: 
+    #  ratio - ratio between input and output channels
+    #  activation: the activation function is PReLU(x) = max(0, x) + a*min(0,x)
+    def __init__(self, in_channels, out_channels, ratio = 4):
+        super(bottleNeck_up, self).__init__()
+        self.in_channels = in_channels
+        self.reduced_channels = int(in_channels / ratio)
+        self.out_channels = out_channels
+        
+        self.activation = nn.PReLU()
+        
+        self.unpool = nn.MaxUnpool2d(kernel_size = 2, stride = 2)
+        self.main_conv = nn.Conv2d(in_channels = self.in_channels,
+                              out_channels = self.out_channels,
+                              kernel_size = 1)
+                              
+        self.dropout = nn.Dropout2d(p = 0.1)
+        
+        self.convt1 = nn.ConvTranspose2d(in_channels = self.in_channels,
+                                         out_channels = self.reduced_channels,
+                                         kernel_size = 1,
+                                         padding = 0,
+                                         bias = False)
+        # This layer used for unsampling
+        self.convt2 = nn.ConvTranspose2d(in_channels = self.reduced_channels,
+                                         out_channels = self.reduced_channels,
+                                         kernel_size = 3,
+                                         stride = 2,
+                                         padding =1,
+                                         output_padding = 1,
+                                         bias = False)
+        self.convt3 = nn.ConvTranspose2d(in_channels = self.reduced_channels,
+                                         out_channels = self.out_channels,
+                                         kernel_size = 1,
+                                         padding = 0,
+                                         bias = False)
+        self.batchNorm1 = nn.BatchNorm2d(self.reduced_channels)
+        self.batchNorm2 = nn.BatchNorm2d(self.out_channels)
+    def forward(self, x, indices):
+        x_main = x
+        # print("Before operation, the size of x:", x.size())
+        # extension
+        x = self.convt1(x)
+        x = self.batchNorm1(x)
+        x = self.activation(x)
+        
+        x = self.convt2(x)
+        x = self.batchNorm1(x)
+        x = self.activation(x)
+        
+        x = self.convt3(x)
+        x = self.batchNorm2(x)
+        x = self.activation(x)
+        
+        x = self.dropout(x)
+        
+        # main branch
+        x_main = self.main_conv(x_main)
+        # print('Check the size: ',x_main.size(), x.size())
+        # input()
+        x_main = self.unpool(x_main, indices, output_size = x.size())
+        
+        # summing
+        x = x + x_main
+        x = self.activation(x)
+        
+        return x
+        
 class ENet(nn.Module):
     # For the regularizer, we use Spatial Dropout, with p = 0.01
     # before bottlenect 2.0, and p = 0.1 afterwards
@@ -306,6 +388,74 @@ class ENet(nn.Module):
                               sampling_flag = False,
                               p = 0.01)
         # Stage 2: 9 bottleneck blocks 
+        self.b20 = bottleNeck(dilation = 1,
+                              in_channels = 64,
+                              out_channels = 128,
+                              sampling_flag = True)
+                              
+        self.b21 = bottleNeck(dilation = 1,
+                              in_channels = 128,
+                              out_channels = 128,
+                              sampling_flag = False)
+        # dilated 2
+        self.b22 = bottleNeck(dilation = 2,
+                              in_channels = 128,
+                              out_channels = 128,
+                              sampling_flag = False)
+        self.b23 = bottleNeck_as(in_channels = 128,
+                                 out_channels = 128)
+        self.b24 = bottleNeck(dilation = 4,
+                              in_channels = 128,
+                              out_channels = 128,
+                              sampling_flag = False)
+                              
+        self.b25 = bottleNeck(dilation = 1,
+                              in_channels = 128,
+                              out_channels = 128,
+                              sampling_flag = False)
+                              
+        self.b26 = bottleNeck(dilation = 8,
+                              in_channels = 128,
+                              out_channels = 128,
+                              sampling_flag = False)
+        self.b27 = bottleNeck_as(in_channels = 128,
+                                 out_channels = 128)
+        self.b28 = bottleNeck(dilation = 16,
+                              in_channels = 128,
+                              out_channels = 128,
+                              sampling_flag = False)
+        # Stage 3: same a Stage 2, without bottleneck2.0
+        self.b31 = bottleNeck(dilation = 1,
+                              in_channels = 128,
+                              out_channels = 128,
+                              sampling_flag = False)
+                              
+        self.b32 = bottleNeck(dilation = 2,
+                              in_channels = 128,
+                              out_channels = 128,
+                              sampling_flag = False)
+        self.b33 = bottleNeck_as(in_channels = 128,
+                                 out_channels = 128)
+        self.b34 = bottleNeck(dilation = 4,
+                              in_channels = 128,
+                              out_channels = 128,
+                              sampling_flag = False)
+                              
+        self.b35 = bottleNeck(dilation = 1,
+                              in_channels = 128,
+                              out_channels = 128,
+                              sampling_flag = False)
+                              
+        self.b36 = bottleNeck(dilation = 8,
+                              in_channels = 128,
+                              out_channels = 128,
+                              sampling_flag = False)
+        self.b37 = bottleNeck_as(in_channels = 128,
+                                 out_channels = 128)
+        self.b38 = bottleNeck(dilation = 16,
+                              in_channels = 128,
+                              out_channels = 128,
+                              sampling_flag = False)
     def forward(self, x):
         # The initial block
         x = self.init(x)
@@ -316,9 +466,28 @@ class ENet(nn.Module):
         x = self.b13(x)
         x = self.b14(x)
         # Stage 2: 9 bottleneck blocks
+        x, ind2 = self.b20(x)
+        x = self.b21(x)
+        x = self.b22(x)
+        x = self.b23(x)
+        x = self.b24(x)
+        x = self.b25(x)
+        x = self.b26(x)
+        x = self.b27(x)
+        x = self.b28(x)
+        
+        # Stage 3: same as Stage 2 without bottleneck2.0
+        x = self.b31(x)
+        x = self.b32(x)
+        x = self.b33(x)
+        x = self.b34(x)
+        x = self.b35(x)
+        x = self.b36(x)
+        x = self.b37(x)
+        x = self.b38(x)
+        # Stage 4: upsampling bottleneck
         
         return x
-
 
 if __name__=="__main__":
     print("Hello ENet for semantic segmentation")
