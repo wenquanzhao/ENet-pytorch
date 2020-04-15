@@ -17,7 +17,7 @@ num_workers = 4
 C = 12
 restore = False
 lr = 0.01
-epochs = 5
+epochs = 10
 checkpointDir = './checkpoint'
 logInterval = 2
 logFile = './checkpoint/Stats'
@@ -76,7 +76,7 @@ def train(modelPath):
     #save model
     efficientNet.eval().cpu()
     save_model_filename = "final_epoch_" + str(e + 1) + "_batch_id_" + str(batchID + 1) + ".model"
-    save_model_path = os.path.join(checkpointDir, '/', save_model_filename)
+    save_model_path = os.path.join(checkpointDir, save_model_filename)
     torch.save(efficientNet.state_dict(), save_model_path)
     
     print("\nDone, trained model saved at", save_model_path)
