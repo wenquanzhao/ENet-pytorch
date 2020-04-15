@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from dataset import CamVid 
+from dataset import CamVid, showImage 
 from torch.utils.data import DataLoader
 
 from ENet import ENet
@@ -10,14 +10,20 @@ from ENet import ENet
 import time
 import os
 
+import cv2
+import matplotlib.pyplot as plt
+from PIL import Image
+import numpy as np
+
 device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
 # training parameters
-N = 2
+trainFlag = False
+N = 5
 num_workers = 4
 C = 12
-restore = False
+restore = True
 lr = 0.01
-epochs = 10
+epochs = 500
 checkpointDir = './checkpoint'
 logInterval = 2
 logFile = './checkpoint/Stats'
@@ -53,6 +59,17 @@ def train(modelPath):
             # forward + backward + optimize
             outputs = efficientNet(inputs.float())
             # print(outputs.shape, labels.shape)
+            #########################################
+            '''
+            Check the training process
+            '''
+            annotation = outputs[0,:,:,:].squeeze(0)
+            # combine to one dimension
+            Annot = annotation.data.max(0)[1].cpu().numpy()
+            print(Annot, np.max(Annot), np.min(Annot))
+            plt.imshow(Annot)
+            input()
+            #########################################
             loss = criterion(outputs, labels.long())
             loss.backward()
             torch.nn.utils.clip_grad_norm_(efficientNet.parameters(), 3.0)
@@ -75,11 +92,48 @@ def train(modelPath):
                         f.write(mesg)
     #save model
     efficientNet.eval().cpu()
-    save_model_filename = "final_epoch_" + str(e + 1) + "_batch_id_" + str(batchID + 1) + ".model"
+    save_model_filename = "final_epoch_" + str(e + 1) + "_batch_id_" + str(batchID + 1) + ".pth"
     save_model_path = os.path.join(checkpointDir, save_model_filename)
     torch.save(efficientNet.state_dict(), save_model_path)
     
     print("\nDone, trained model saved at", save_model_path)
+def test(modelPath):
+    testDataset = CamVid()
+    testLoader = DataLoader(testDataset, 
+                             batch_size = N,
+                             shuffle = True,
+                             num_workers = num_workers,
+                             drop_last = True)
+    
+    eNet = ENet(C)
+    eNet.load_state_dict(torch.load(modelPath))
+
+    for e in range(4):
+        batch_avg_EER = 0
+        for batchID, batchData in enumerate(testLoader):
+            inputs, labels = batchData['image'], batchData['semantic']
+            inputs, labels = inputs.to(device), labels.to(device)
+            
+            with torch.no_grad():
+                outputs = eNet(inputs.float())
+                print('epoch: ', e,'batchID: ', batchID, outputs.shape)
+            
+            # plt.imshow(outputs.numpy()[0, 0,:,:])
+            
+            '''
+            Check the training process
+            '''
+            annotation = outputs[0,:,:,:].squeeze(0)
+            # combine to one dimension
+            Annot = annotation.data.max(0)[1].cpu().numpy()
+            # print(Annot, np.max(Annot), np.min(Annot))
+            showImage(Annot)
+
 if __name__ == '__main__':
-    modelPath = './model'
-    train(modelPath)
+    modelPath = './checkpoint/final_epoch_500_batch_id_2.pth'
+    if trainFlag:
+        print('Training the model')
+        train(modelPath)
+    else:
+        print('Testing the model')
+        test(modelPath)

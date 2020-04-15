@@ -80,6 +80,7 @@ if __name__=="__main__":
         
         print('='*50)
         #print(sample['image'])
+        print(sample['semantic'], sample['semantic'].max(), sample['semantic'].min())
         print(i, sample['image'].shape, sample['semantic'].shape)
         print('='*50)
         
@@ -88,7 +89,7 @@ if __name__=="__main__":
         ax.set_title('Sample #{}'.format(i))
         ax.axis('off')
         # showImage(sample['image'].transpose((1, 2, 0)))
-        # showImage(sample['semantic'])
+        showImage(sample['semantic'])
 
         if i == 3:
             plt.show()
