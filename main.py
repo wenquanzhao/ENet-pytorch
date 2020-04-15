@@ -52,8 +52,7 @@ def train(modelPath):
             optimizer.zero_grad()
             # forward + backward + optimize
             outputs = efficientNet(inputs.float())
-            print(outputs.shape, labels.shape)
-            input()
+            # print(outputs.shape, labels.shape)
             loss = criterion(outputs, labels.long())
             loss.backward()
             torch.nn.utils.clip_grad_norm_(efficientNet.parameters(), 3.0)

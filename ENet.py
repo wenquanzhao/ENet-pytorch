@@ -88,11 +88,11 @@ class bottleNeck(nn.Module):
        # caluculating the number of reduced channels
        # self.reduced_channels = int()
        if sampling_flag == True:
-           print('== down sampling ==')
+           # print('== down sampling ==')
            self.stride = 2
            self.reduced_channels = int(in_channels // ratio)
        if sampling_flag == False:
-           print('== no down sampling ==')
+           # print('== no down sampling ==')
            self.stride = 1
            self.reduced_channels = int(out_channels // ratio)
            

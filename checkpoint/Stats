@@ -1,0 +1,12 @@
+Wed Apr 15 12:11:53 2020	Epoch:1[2/5],Iteration:2	Loss:2.5587	TLoss:2.5587	
+Wed Apr 15 12:11:59 2020	Epoch:1[4/5],Iteration:4	Loss:2.5429	TLoss:2.5529	
+Wed Apr 15 12:12:42 2020	Epoch:1[2/5],Iteration:2	Loss:2.5083	TLoss:2.5075	
+Wed Apr 15 12:12:45 2020	Epoch:1[4/5],Iteration:4	Loss:2.5226	TLoss:2.5109	
+Wed Apr 15 12:12:50 2020	Epoch:2[2/5],Iteration:7	Loss:2.4898	TLoss:2.4870	
+Wed Apr 15 12:12:53 2020	Epoch:2[4/5],Iteration:9	Loss:2.4666	TLoss:2.4786	
+Wed Apr 15 12:12:59 2020	Epoch:3[2/5],Iteration:12	Loss:2.4459	TLoss:2.4460	
+Wed Apr 15 12:13:02 2020	Epoch:3[4/5],Iteration:14	Loss:2.4508	TLoss:2.4437	
+Wed Apr 15 12:13:07 2020	Epoch:4[2/5],Iteration:17	Loss:2.4050	TLoss:2.4208	
+Wed Apr 15 12:13:10 2020	Epoch:4[4/5],Iteration:19	Loss:2.3863	TLoss:2.4042	
+Wed Apr 15 12:13:16 2020	Epoch:5[2/5],Iteration:22	Loss:2.3699	TLoss:2.3736	
+Wed Apr 15 12:13:19 2020	Epoch:5[4/5],Iteration:24	Loss:2.3354	TLoss:2.3582	
