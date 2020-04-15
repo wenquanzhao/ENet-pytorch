@@ -17,15 +17,15 @@ import numpy as np
 
 device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
 # training parameters
-trainFlag = False
-N = 5
+trainFlag = True
+N = 10
 num_workers = 4
 C = 12
 restore = True
 lr = 0.01
 epochs = 500
 checkpointDir = './checkpoint'
-logInterval = 2
+logInterval = 1
 logFile = './checkpoint/Stats'
 
 def train(modelPath):
@@ -58,18 +58,16 @@ def train(modelPath):
             optimizer.zero_grad()
             # forward + backward + optimize
             outputs = efficientNet(inputs.float())
-            # print(outputs.shape, labels.shape)
+
             #########################################
-            '''
-            Check the training process
-            '''
-            annotation = outputs[0,:,:,:].squeeze(0)
-            # combine to one dimension
-            Annot = annotation.data.max(0)[1].cpu().numpy()
-            print(Annot, np.max(Annot), np.min(Annot))
-            plt.imshow(Annot)
-            input()
+            #annotation = outputs[0,:,:,:].squeeze(0)
+            ## combine to one dimension
+            #Annot = annotation.data.max(0)[1].cpu().numpy()
+            #print(Annot, np.max(Annot), np.min(Annot))
+            #plt.imshow(Annot)
+            #input()
             #########################################
+            
             loss = criterion(outputs, labels.long())
             loss.backward()
             torch.nn.utils.clip_grad_norm_(efficientNet.parameters(), 3.0)
@@ -91,7 +89,10 @@ def train(modelPath):
                     with open(logFile,'a') as f:
                         f.write(mesg)
     #save model
-    efficientNet.eval().cpu()
+    # Checkout to eval to save model
+    # efficientNet.eval().cpu()
+    print("====not eval() before save====")
+    efficientNet.cpu()
     save_model_filename = "final_epoch_" + str(e + 1) + "_batch_id_" + str(batchID + 1) + ".pth"
     save_model_path = os.path.join(checkpointDir, save_model_filename)
     torch.save(efficientNet.state_dict(), save_model_path)
@@ -107,7 +108,7 @@ def test(modelPath):
     
     eNet = ENet(C)
     eNet.load_state_dict(torch.load(modelPath))
-
+    # eNet.eval()
     for e in range(4):
         batch_avg_EER = 0
         for batchID, batchData in enumerate(testLoader):
@@ -116,10 +117,9 @@ def test(modelPath):
             
             with torch.no_grad():
                 outputs = eNet(inputs.float())
-                print('epoch: ', e,'batchID: ', batchID, outputs.shape)
-            
-            # plt.imshow(outputs.numpy()[0, 0,:,:])
-            
+                
+            plt.imshow(outputs.numpy()[0, 0,:,:])
+            # outputs = eNet(inputs.float())
             '''
             Check the training process
             '''
