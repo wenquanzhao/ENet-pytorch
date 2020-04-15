@@ -343,7 +343,6 @@ class bottleNeck_up(nn.Module):
         # main branch
         x_main = self.main_conv(x_main)
         # print('Check the size: ',x_main.size(), x.size())
-        # input()
         x_main = self.unpool(x_main, indices, output_size = x.size())
         
         # summing
@@ -456,6 +455,29 @@ class ENet(nn.Module):
                               in_channels = 128,
                               out_channels = 128,
                               sampling_flag = False)
+        # Stage 4: upsampling
+        self.b40 = bottleNeck_up(in_channels = 128,
+                                 out_channels = 64)
+        self.b41 = bottleNeck(dilation = 1,
+                              in_channels = 64,
+                              out_channels = 64)
+        self.b42 = bottleNeck(dilation = 1,
+                              in_channels = 64,
+                              out_channels = 64)
+        # Stage 5: upsampling
+        self.b50 = bottleNeck_up(in_channels = 64,
+                                 out_channels = 16)
+        self.b51 = bottleNeck(dilation = 1,
+                              in_channels = 16,
+                              out_channels = 16)
+        # Final ConvTranspose Layer
+        self.fullconv = nn.ConvTranspose2d(in_channels = 16,
+                                           out_channels = self.C,
+                                           kernel_size = 3,
+                                           stride = 2,
+                                           padding = 1,
+                                           output_padding =1,
+                                           bias = False)
     def forward(self, x):
         # The initial block
         x = self.init(x)
@@ -486,13 +508,23 @@ class ENet(nn.Module):
         x = self.b37(x)
         x = self.b38(x)
         # Stage 4: upsampling bottleneck
+        x = self.b40(x, ind2)
+        x = self.b41(x)
+        x = self.b42(x)
         
+        # Stage 5: upsampling bottleneck
+        x = self.b50(x, ind1)
+        x = self.b51(x)
+        
+        # Final bottleneck 
+        x = self.fullconv(x)
         return x
 
 if __name__=="__main__":
     print("Hello ENet for semantic segmentation")
-    C = 3
+    C = 5
     ENet = ENet(C)
     images = torch.rand(6, 3, 512, 512)
     output = ENet(images)
+    # the output should be 
     print(output.shape)
