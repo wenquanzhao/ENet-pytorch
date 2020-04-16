@@ -17,7 +17,7 @@ import numpy as np
 
 device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
 # training parameters
-trainFlag = True
+trainFlag = False
 N = 10
 num_workers = 4
 C = 12
@@ -108,7 +108,7 @@ def test(modelPath):
     
     eNet = ENet(C)
     eNet.load_state_dict(torch.load(modelPath))
-    # eNet.eval()
+    #eNet.eval()
     for e in range(4):
         batch_avg_EER = 0
         for batchID, batchData in enumerate(testLoader):
@@ -118,7 +118,7 @@ def test(modelPath):
             with torch.no_grad():
                 outputs = eNet(inputs.float())
                 
-            plt.imshow(outputs.numpy()[0, 0,:,:])
+            #plt.imshow(outputs.numpy()[0, 0,:,:])
             # outputs = eNet(inputs.float())
             '''
             Check the training process
@@ -130,7 +130,7 @@ def test(modelPath):
             showImage(Annot)
 
 if __name__ == '__main__':
-    modelPath = './checkpoint/final_epoch_500_batch_id_2.pth'
+    modelPath = './checkpoint/final_epoch_500_batch_id_1.pth'
     if trainFlag:
         print('Training the model')
         train(modelPath)
