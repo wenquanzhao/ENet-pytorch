@@ -20,6 +20,48 @@ def showImage(image):
     #plt.scatter(landmarks[:, 0], landmarks[:, 1], s=10, marker='.', c='r')
     plt.pause(0.001)  # pause a bit so that plots are updated
 
+class cattleDataset(Dataset):
+    def __init__(self, training = False):
+        self.training = training
+        if self.training:
+            print("[INFO:] using training dataset.\n")
+            self.image_path = '../Dataset/cattleDataset/picture/*/*.png'
+            self.label_path = '../Dataset/cattleDataset/mask/*/*.png'
+        else:
+            print("[INFO:] using testing dataset.\n")
+            self.image_path = '../Dataset/cattleDataset/test/*/*.png'
+            self.label_path = '../Dataset/cattleDataset/testannot/*/*.png'
+            
+        self.imageData = glob.glob(os.path.dirname(self.image_path))
+        self.semanticData = glob.glob(os.path.dirname(self.label_path))
+        
+    def __len__(self):
+        return len(self.imageData)
+    def __getitem__(self, idx):
+        if torch.is_tensor(idx):
+            idx = idx.tolist()
+        image_name = self.imageData[idx]
+        semantic_name = self.semanticData[idx]
+        #print('='*15, 'Check image and semantic', '='*15)
+        #print(image_name, semantic_name)
+        #print('='*50)
+        
+        image = cv2.imread(image_name)
+        semantic = Image.open(semantic_name) # cv2 cannot read the annot
+        
+        image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        semantic = np.array(semantic)
+        
+        # Resizing using nearest neighbor method
+        # image_rgb = cv2.resize(image_rgb, (h, w), cv2.INTER_NEAREST)
+        
+        # Change image format to C * H * W, semantic has only one channel
+        image_rgb = image_rgb.transpose((2, 0, 1))
+        
+        sample = {'image': image_rgb, 'semantic': semantic}
+        
+        return sample
+    
 class CamVid(Dataset):
     def __init__(self, training = True):
         self.training = training
@@ -72,7 +114,8 @@ class CamVid(Dataset):
         return sample
         
 if __name__=="__main__":
-    train_dataset = CamVid()
+    #train_dataset = CamVid()
+    train_dataset = cattleDataset()
     fig = plt.figure()
     print(len(train_dataset))
     for i in range(len(train_dataset)):
@@ -80,7 +123,7 @@ if __name__=="__main__":
         
         print('='*50)
         #print(sample['image'])
-        print(sample['semantic'], sample['semantic'].max(), sample['semantic'].min())
+        #print(sample['semantic'], sample['semantic'].max(), sample['semantic'].min())
         print(i, sample['image'].shape, sample['semantic'].shape)
         print('='*50)
         

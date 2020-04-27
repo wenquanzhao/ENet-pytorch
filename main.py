@@ -17,7 +17,7 @@ import numpy as np
 
 device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
 # training parameters
-trainFlag = False
+trainFlag = True
 N = 10
 num_workers = 4
 C = 12
@@ -130,6 +130,8 @@ def test(modelPath):
             showImage(Annot)
 
 if __name__ == '__main__':
+    
+
     modelPath = './checkpoint/final_epoch_500_batch_id_1.pth'
     if trainFlag:
         print('Training the model')
