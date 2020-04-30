@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from dataset import CamVid, showImage 
+from dataset import CamVid, showImage, cattleDataset
 from torch.utils.data import DataLoader
 
 from ENet import ENet
@@ -17,10 +17,10 @@ import numpy as np
 
 device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
 # training parameters
-trainFlag = True
-N = 10
+trainFlag = False
+N = 9
 num_workers = 4
-C = 12
+C = 3
 restore = True
 lr = 0.01
 epochs = 500
@@ -29,7 +29,8 @@ logInterval = 1
 logFile = './checkpoint/Stats'
 
 def train(modelPath):
-    trainDataset = CamVid()
+    # trainDataset = CamVid()
+    trainDataset = cattleDataset()
     trainLoader = DataLoader(trainDataset, 
                              batch_size = N,
                              shuffle = True,
@@ -39,8 +40,18 @@ def train(modelPath):
     # instantiation the ENet
     efficientNet = ENet(C)
     if restore:
-        efficientNet.load_state_dict(torch.load(modelPath))
-    
+        print("++"*10,'\n')
+        pretrained_dict = torch.load(modelPath)
+        model_dict = efficientNet.state_dict()
+        ## remove keys DONNOT belong to model_dict
+        pretrained_dict={ k : v for k, v in pretrained_dict.items() if k in model_dict}
+        ## update current keys of model_dict
+        #print(model_dict)
+        model_dict.update(pretrained_dict)
+        ## load model
+        efficientNet.load_state_dict(model_dict)
+        print("[INFO:] Load pretrained model successfully!!!\n")
+        
     criterion = nn.CrossEntropyLoss()
     optimizer = torch.optim.SGD(efficientNet.parameters(),
                                 lr = lr,
@@ -99,7 +110,8 @@ def train(modelPath):
     
     print("\nDone, trained model saved at", save_model_path)
 def test(modelPath):
-    testDataset = CamVid()
+    # testDataset = CamVid()
+    testDataset = cattleDataset()
     testLoader = DataLoader(testDataset, 
                              batch_size = N,
                              shuffle = True,

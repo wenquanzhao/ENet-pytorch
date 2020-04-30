@@ -471,7 +471,7 @@ class ENet(nn.Module):
                               in_channels = 16,
                               out_channels = 16)
         # Final ConvTranspose Layer
-        self.fullconv = nn.ConvTranspose2d(in_channels = 16,
+        self.fullconv_Ad = nn.ConvTranspose2d(in_channels = 16,
                                            out_channels = self.C,
                                            kernel_size = 3,
                                            stride = 2,
@@ -517,7 +517,7 @@ class ENet(nn.Module):
         x = self.b51(x)
         
         # Final bottleneck 
-        x = self.fullconv(x)
+        x = self.fullconv_Ad(x)
         return x
 
 if __name__=="__main__":
