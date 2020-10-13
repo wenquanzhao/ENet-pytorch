@@ -142,8 +142,6 @@ def test(modelPath):
             showImage(Annot)
 
 if __name__ == '__main__':
-    
-
     modelPath = './checkpoint/final_epoch_500_batch_id_1.pth'
     if trainFlag:
         print('Training the model')
