@@ -38,7 +38,7 @@ def train(modelPath):
                              drop_last = True)
     print(trainLoader)
     # instantiation the ENet
-    efficientNet = ENet(C)
+    efficientNet = ENet(C).to(device)
     if restore:
         print("++"*10,'\n')
         pretrained_dict = torch.load(modelPath)
